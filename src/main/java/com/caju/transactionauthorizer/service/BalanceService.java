@@ -1,11 +1,11 @@
 package com.caju.transactionauthorizer.service;
 
-import java.math.BigDecimal;
+import com.caju.transactionauthorizer.document.BalanceDocument;
+
+import java.util.Optional;
 
 public interface BalanceService {
-    void performBalance(String account);
+    Optional<BalanceDocument> findByAccount(final String account);
 
-    BigDecimal checkBalance(String account);
-
-
+       void save(BalanceDocument balance);
 }

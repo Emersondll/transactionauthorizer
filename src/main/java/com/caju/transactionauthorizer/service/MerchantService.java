@@ -6,5 +6,6 @@ import java.util.Optional;
 
 public interface MerchantService {
 
-    Optional<MerchantDocument> findById(String id);
+    Optional<MerchantDocument> findByName(final String merchant);
+
 }

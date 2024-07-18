@@ -12,10 +12,10 @@ db = db.getSiblingDB('miniautorizador');
 db.createCollection('mcc');
 // Inserindo alguns dados iniciais na coleção de MCC
 db.mcc.insertMany([
-  { code: '5411', description: 'Grocery Stores, Supermarkets' },
-  { code: '5412', description: 'Grocery Stores, Supermarkets' },
-  { code: '5811', description: 'Eating Places, Restaurants, Fast Food Restaurants' },
-  { code: '5812', description: 'Eating Places, Restaurants, Fast Food Restaurants' }
+  { code: '5411', description: 'FOOD' },
+  { code: '5412', description: 'FOOD' },
+  { code: '5811', description: 'MEAL' },
+  { code: '5812', description: 'MEAL' }
 ]);
 
 // Verifica se a coleção de Balance já existe, caso contrário, cria e insere dados

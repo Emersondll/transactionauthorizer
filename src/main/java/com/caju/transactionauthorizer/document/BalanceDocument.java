@@ -9,10 +9,20 @@ import java.math.BigDecimal;
 public class BalanceDocument {
 
     @Id
+    private String id;
     private String account;
     private BigDecimal food;
     private BigDecimal meal;
     private BigDecimal cash;
+
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getAccount() {
         return account;
