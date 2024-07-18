@@ -46,27 +46,27 @@ public class TransactionServiceImpl implements TransactionService {
         String accountId = transactionModel.account();
         BigDecimal amount = transactionModel.totalAmount();
 
-        // Get balance
-        Optional<BalanceDocument> balanceOptional = balanceService.findByAccount(accountId);
-        if (balanceOptional.isEmpty()) {
+        try {
+            // Get balance
+            Optional<BalanceDocument> balanceOptional = balanceService.findByAccount(accountId);
+            // Determine MCC category
+            String mccCategoryNumber = determineMccCategory(transactionModel);
+            CategoryCodeName categoryCodeName = categoryCodesService.checkCategory(mccCategoryNumber);
+
+            // Update wallet balance based on category
+            TransactionCodeModel transactionCodeModel = updateWalletBalance(balanceOptional.get(), categoryCodeName, amount);
+            if (transactionCodeModel.code().equals(TransactionStatusCode.INSUFFICIENT_FUNDS.getCode())) {
+                return transactionCodeModel;
+            }
+
+            // Save updated balance and transaction
+            balanceService.save(balanceOptional.get());
+            saveTransaction(transactionModel, accountId, amount, mccCategoryNumber);
+
+            return transactionCodeModel;
+        } catch (Exception e) {
             return new TransactionCodeModel(TransactionStatusCode.PROCESSING_ERROR.getCode());
         }
-
-        // Determine MCC category
-        String mccCategoryNumber = determineMccCategory(transactionModel);
-        CategoryCodeName categoryCodeName = categoryCodesService.checkCategory(mccCategoryNumber);
-
-        // Update wallet balance based on category
-        TransactionCodeModel transactionCodeModel = updateWalletBalance(balanceOptional.get(), categoryCodeName, amount);
-        if (transactionCodeModel.code().equals(TransactionStatusCode.INSUFFICIENT_FUNDS.getCode())) {
-            return transactionCodeModel;
-        }
-
-        // Save updated balance and transaction
-        balanceService.save(balanceOptional.get());
-        saveTransaction(transactionModel, accountId, amount, mccCategoryNumber);
-
-        return transactionCodeModel;
     }
 
     private String determineMccCategory(TransactionModel transactionModel) {
@@ -81,9 +81,12 @@ public class TransactionServiceImpl implements TransactionService {
 
     private TransactionCodeModel updateWalletBalance(BalanceDocument balance, CategoryCodeName categoryCodeName, BigDecimal amount) {
         boolean updated = switch (categoryCodeName) {
-            case FOOD -> updateBalanceWithFallback(balance::getFood, balance::setFood, balance::getCash, balance::setCash, amount);
-            case MEAL -> updateBalanceWithFallback(balance::getMeal, balance::setMeal, balance::getCash, balance::setCash, amount);
-            case CASH -> updateBalanceWithFallback(balance::getCash, balance::setCash, balance::getCash, balance::setCash, amount);
+            case FOOD ->
+                    updateBalanceWithFallback(balance::getFood, balance::setFood, balance::getCash, balance::setCash, amount);
+            case MEAL ->
+                    updateBalanceWithFallback(balance::getMeal, balance::setMeal, balance::getCash, balance::setCash, amount);
+            case CASH ->
+                    updateBalanceWithFallback(balance::getCash, balance::setCash, balance::getCash, balance::setCash, amount);
         };
 
         if (!updated) {
