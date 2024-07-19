@@ -10,6 +10,12 @@ public class MerchantDocument {
     private String name;
     private String mcc;
 
+    public MerchantDocument(String id, String name, String mcc) {
+        this.id = id;
+        this.name = name;
+        this.mcc = mcc;
+    }
+
     public String getId() {
         return id;
     }

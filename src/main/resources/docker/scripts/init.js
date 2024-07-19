@@ -22,9 +22,9 @@ db.mcc.insertMany([
 
 db.createCollection('balance');
   db.balance.insertMany([
-   { account: '1234567890', food: 100.00, meal: 50.00, cash: 200.00 },
-   { account: '1234567891', food: 150.00, meal: 60.00, cash: 300.00 },
-   { account: '1234567892', food: 200.00, meal: 70.00, cash: 400.00 }
+   { account: '1234567890', food: 100.00, meal: 500.00, cash: 200.00, version:1 },
+   { account: '1234567891', food: 150.00, meal: 600.00, cash: 300.00, version:1 },
+   { account: '1234567892', food: 200.00, meal: 700.00, cash: 400.00, version:1 }
   ]);
 
 

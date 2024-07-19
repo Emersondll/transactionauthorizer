@@ -1,6 +1,7 @@
 package com.caju.transactionauthorizer.document;
 
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
@@ -15,6 +16,28 @@ public class BalanceDocument {
     private BigDecimal meal;
     private BigDecimal cash;
 
+    @Version
+    private Long version;
+
+    public BalanceDocument() {
+    }
+
+    public BalanceDocument(String id, String account, BigDecimal food, BigDecimal meal, BigDecimal cash, Long version) {
+        this.id = id;
+        this.account = account;
+        this.food = food;
+        this.meal = meal;
+        this.cash = cash;
+        this.version = version;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
+    }
 
     public String getId() {
         return id;

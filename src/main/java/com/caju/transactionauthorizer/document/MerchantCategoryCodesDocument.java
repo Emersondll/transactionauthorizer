@@ -11,6 +11,12 @@ public class MerchantCategoryCodesDocument {
     private String code;
     private CategoryCodeName description;
 
+    public MerchantCategoryCodesDocument(String id, String code, CategoryCodeName description) {
+        this.id = id;
+        this.code = code;
+        this.description = description;
+    }
+
     public String getId() {
         return id;
     }

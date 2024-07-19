@@ -42,25 +42,26 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     @Transactional
-    public TransactionCodeModel performTransaction(TransactionModel transactionModel) {
+    public TransactionCodeModel performTransaction(final TransactionModel transactionModel) {
         String accountId = transactionModel.account();
         BigDecimal amount = transactionModel.totalAmount();
 
         try {
-            // Get balance
             Optional<BalanceDocument> balanceOptional = balanceService.findByAccount(accountId);
-            // Determine MCC category
+            if (balanceOptional.isEmpty()) {
+                return new TransactionCodeModel(TransactionStatusCode.PROCESSING_ERROR.getCode());
+            }
+
+            BalanceDocument balance = balanceOptional.get();
             String mccCategoryNumber = determineMccCategory(transactionModel);
             CategoryCodeName categoryCodeName = categoryCodesService.checkCategory(mccCategoryNumber);
 
-            // Update wallet balance based on category
-            TransactionCodeModel transactionCodeModel = updateWalletBalance(balanceOptional.get(), categoryCodeName, amount);
+            TransactionCodeModel transactionCodeModel = updateWalletBalance(balance, categoryCodeName, amount);
             if (transactionCodeModel.code().equals(TransactionStatusCode.INSUFFICIENT_FUNDS.getCode())) {
                 return transactionCodeModel;
             }
 
-            // Save updated balance and transaction
-            balanceService.save(balanceOptional.get());
+            balanceService.save(balance);
             saveTransaction(transactionModel, accountId, amount, mccCategoryNumber);
 
             return transactionCodeModel;
@@ -69,7 +70,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
     }
 
-    private String determineMccCategory(TransactionModel transactionModel) {
+    protected String determineMccCategory(TransactionModel transactionModel) {
         Optional<MerchantDocument> merchantOptional = merchantService.findByName(transactionModel.merchant());
         if (merchantOptional.isPresent()) {
             return merchantOptional.get().getMcc();
@@ -79,7 +80,7 @@ public class TransactionServiceImpl implements TransactionService {
         }
     }
 
-    private TransactionCodeModel updateWalletBalance(BalanceDocument balance, CategoryCodeName categoryCodeName, BigDecimal amount) {
+    protected TransactionCodeModel updateWalletBalance(BalanceDocument balance, CategoryCodeName categoryCodeName, BigDecimal amount) {
         boolean updated = switch (categoryCodeName) {
             case FOOD ->
                     updateBalanceWithFallback(balance::getFood, balance::setFood, balance::getCash, balance::setCash, amount);
@@ -96,9 +97,9 @@ public class TransactionServiceImpl implements TransactionService {
         return new TransactionCodeModel(TransactionStatusCode.APPROVED.getCode());
     }
 
-    private boolean updateBalanceWithFallback(Supplier<BigDecimal> primaryGetter, Consumer<BigDecimal> primarySetter,
-                                              Supplier<BigDecimal> fallbackGetter, Consumer<BigDecimal> fallbackSetter, BigDecimal amount) {
-        // Update primary balance
+    protected boolean updateBalanceWithFallback(Supplier<BigDecimal> primaryGetter, Consumer<BigDecimal> primarySetter,
+                                                Supplier<BigDecimal> fallbackGetter, Consumer<BigDecimal> fallbackSetter, BigDecimal amount) {
+
         BigDecimal primaryBalance = primaryGetter.get();
         BigDecimal updatedPrimaryBalance = subtractAmount(primaryBalance, amount);
 
@@ -107,7 +108,6 @@ public class TransactionServiceImpl implements TransactionService {
             return true;
         }
 
-        // Update fallback balance if primary balance is insufficient
         BigDecimal fallbackBalance = fallbackGetter.get();
         BigDecimal updatedFallbackBalance = subtractAmount(fallbackBalance, amount);
 
@@ -120,13 +120,12 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     private BigDecimal subtractAmount(BigDecimal balance, BigDecimal amount) {
-        if (balance.compareTo(amount) >= 0) {
-            return balance.subtract(amount);
-        }
-        return null;
+        BigDecimal result = balance.subtract(amount);
+        return result.compareTo(BigDecimal.ZERO) < 0 ? null : result;
     }
 
-    private void saveTransaction(TransactionModel transactionModel, String accountId, BigDecimal amount, String mccCategoryNumber) {
+
+    protected void saveTransaction(TransactionModel transactionModel, String accountId, BigDecimal amount, String mccCategoryNumber) {
         TransactionDocument transactionDocument = new TransactionDocument(
                 UUID.randomUUID().toString(), accountId, amount, transactionModel.merchant(), mccCategoryNumber, Timestamp.valueOf(LocalDateTime.now()));
         transactionRepository.save(transactionDocument);
