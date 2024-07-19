@@ -17,7 +17,7 @@ public class MerchantServiceImpl implements MerchantService {
 
 
     @Override
-    public Optional<MerchantDocument> findById(String id) {
-        return repository.findById(id);
+    public Optional<MerchantDocument> findByName(final String merchant) {
+        return repository.findByName(merchant);
     }
 }

@@ -4,6 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 
 @Document(collection = "transaction")
 public class TransactionDocument {
@@ -14,6 +15,16 @@ public class TransactionDocument {
     private BigDecimal amount;
     private String merchant;
     private String mcc;
+    private Timestamp timestamp;
+
+    public TransactionDocument(String id, String accountId, BigDecimal amount, String merchant, String mcc, Timestamp timestamp) {
+        this.id = id;
+        this.accountId = accountId;
+        this.amount = amount;
+        this.merchant = merchant;
+        this.mcc = mcc;
+        this.timestamp = timestamp;
+    }
 
     public String getId() {
         return id;
@@ -53,5 +64,13 @@ public class TransactionDocument {
 
     public void setMcc(String mcc) {
         this.mcc = mcc;
+    }
+
+    public Timestamp getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(Timestamp timestamp) {
+        this.timestamp = timestamp;
     }
 }
